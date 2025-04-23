@@ -1,0 +1,17 @@
+{
+  "name": "proto-compiler",
+  "version": "1.0.0",
+  "description": "Protocol Buffers compiler for quiz game",
+  "main": "compile.js",
+  "scripts": {
+    "compile": "node compile.js",
+    "postinstall": "npm run create-dirs",
+    "create-dirs": "node -e \"const fs=require('fs'); const path=require('path'); const dirs=['svr/src/proto', 'client/src/proto']; dirs.forEach(dir => { try { fs.mkdirSync(path.join(__dirname, dir), {recursive: true}); console.log(`Created directory: ${dir}`); } catch(err) { if (err.code !== 'EEXIST') console.error(err); } });\""
+  },
+  "dependencies": {
+    "protobufjs": "^7.3.0"
+  },
+  "devDependencies": {
+    "protobufjs-cli": "^1.1.2"
+  }
+} 

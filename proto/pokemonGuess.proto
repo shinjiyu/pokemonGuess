@@ -1,0 +1,254 @@
+syntax = "proto3";
+
+package pokemonGuess;
+
+option go_package = ".";
+
+// 命令ID定义
+enum ProtocolNumber {
+  UNKNOWN = 0;
+  // 游戏设置相关
+  REQ_UPDATE_GAME_SETTINGS = 4001;
+  RES_UPDATE_GAME_SETTINGS = 4002;
+  
+  // 游戏控制相关
+  REQ_START_GAME = 4010;
+  RES_START_GAME = 4011;
+  REQ_END_GAME = 4012;
+  RES_END_GAME = 4013;
+  
+  // 游戏操作相关
+  REQ_SUBMIT_GUESS = 4020;
+  RES_SUBMIT_GUESS = 4021;
+  
+  // 数据源切换相关
+  REQ_TOGGLE_DATA_SOURCE = 4025;
+  RES_TOGGLE_DATA_SOURCE = 4026;
+  
+  // 通知相关
+
+  NOTIFY_GAME_STATE = 4030;     // 游戏状态全量同步
+  NOTIFY_GAME_STARTED = 4031;
+  NOTIFY_GAME_ENDED = 4032;
+  NOTIFY_SETTINGS_CHANGED = 4033;
+  NOTIFY_PLAYER_DETAIL = 4034;
+  NOTIFY_DATA_SOURCE_CHANGED = 4035;
+}
+
+// 玩家状态枚举
+enum PlayerStatus {
+  ACTIVE = 0;        // 正在游戏中
+  FOUND_ANSWER = 1;  // 已找到答案
+  OUT_OF_ATTEMPTS = 2; // 已用完次数
+  GAVE_UP = 3;       // 已放弃
+  DISCONNECTED = 4;  // 已断开连接
+}
+
+// 游戏状态枚举
+enum GameState {
+  WAITING = 0;       // 等待开始
+  IN_PROGRESS = 1;   // 游戏进行中
+  ENDED = 2;         // 游戏已结束
+}
+
+// 猜测结果状态枚举
+enum GuessResultStatus {
+  GUESS_UNKNOWN = 0;   // 未知状态
+  GUESS_CORRECT = 1;   // 猜对
+  GUESS_WRONG = 2;     // 猜错
+  GUESS_GAVE_UP = 3;   // 放弃
+  GUESS_DISCONNECTED = 4; // 逃跑/断开连接
+}
+
+// 猜测结果的简化版本 - 用于对其他玩家展示（不包含详细的属性比较，只有基本状态）
+message GuessResultSummary {
+  int32 attempt_number = 1;         // 猜测次数编号
+  GuessResultStatus status = 2;     // 猜测结果状态
+  int64 timestamp = 3;              // 猜测的时间戳
+}
+
+// 属性比较结果
+message AttributeComparison {
+  string key = 1;     // 属性名称/值
+  string value = 2;   // 比较结果 ("True"/"False")
+  string distance = 3; // 距离值 ("exact"/"close"/"far")
+}
+
+// 玩家单次猜测的详细结果 - 包含完整的比较信息，仅发送给猜测的玩家本人
+message PlayerGuessDetail {
+  int32 attempt_number = 1;    // 猜测次数编号
+  string pokemon_name = 2;     // 猜测的宝可梦名称
+  GuessResultStatus status = 3; // 猜测结果状态
+  int64 timestamp = 4;         // 猜测的时间戳
+
+  // 属性比较结果 - 只在status=GUESS_WRONG或GUESS_CORRECT时有意义
+  repeated AttributeComparison type = 5;    // 属性比较
+  AttributeComparison power = 6;            // 种族值比较
+  AttributeComparison speed = 7;            // 速度比较
+  AttributeComparison attack = 8;           // 攻击比较
+  AttributeComparison defense = 9;          // 防御比较
+  AttributeComparison generation = 10;      // 世代比较
+  AttributeComparison shape = 11;           // 外形比较
+  AttributeComparison evolution = 12;       // 进化方式比较
+  AttributeComparison catch_rate = 13;      // 捕获率比较
+  repeated AttributeComparison abilities = 14; // 特性比较
+  repeated AttributeComparison eggs = 15;   // 蛋组比较
+  repeated AttributeComparison labels = 16; // 标签比较
+  AttributeComparison stage = 17;           // 进化阶段比较
+  string color = 18;                        // 颜色
+}
+
+// 玩家信息，增加猜测历史
+message PlayerInfo {
+  string player_id = 1;         // 玩家ID
+  string nickname = 2;          // 玩家昵称
+  string avatar_url = 3;        // 头像URL
+  bool is_host = 4;             // 是否为房主
+  PlayerStatus status = 5;      // 玩家状态
+  int32 attempts_used = 6;      // 已使用的猜测次数
+  int64 last_activity_time = 7; // 最后活动时间戳
+  repeated GuessResultSummary guess_history = 8; // 猜测历史摘要 - 对其他玩家可见
+}
+
+// 玩家详细信息，包含完整猜测历史，只发给玩家本人
+message PlayerDetailInfo {
+  string player_id = 1;         // 玩家ID
+  string nickname = 2;          // 玩家昵称
+  string avatar_url = 3;        // 头像URL
+  bool is_host = 4;             // 是否为房主
+  PlayerStatus status = 5;      // 玩家状态
+  int32 attempts_used = 6;      // 已使用的猜测次数
+  int64 last_activity_time = 7; // 最后活动时间戳
+  repeated PlayerGuessDetail guess_details = 8; // 完整猜测历史详情 - 仅玩家本人可见
+}
+
+// 游戏设置
+message GameSettings {
+  int32 max_attempts = 1;     // 最大猜测次数 (5-15)
+  string pokemon_range = 2;   // 宝可梦范围 (例如 "1-151", "all", "gen1")
+  bool first_correct_ends = 3; // 首位答对即结束
+  int32 time_limit_seconds = 4; // 时间限制(秒)，0表示无限制
+}
+
+// 玩家排名
+message PlayerRank {
+  string player_id = 1;      // 玩家ID
+  string nickname = 2;       // 玩家昵称
+  int32 attempts_used = 3;   // 使用的猜测次数
+  int32 time_used_seconds = 4; // 使用的时间(秒)
+  PlayerStatus final_status = 5; // 最终状态
+  int32 score = 6;           // 得分
+  int32 rank = 7;            // 排名
+}
+
+//============================= 请求消息 =============================
+
+// 更新游戏设置请求
+message ReqUpdateGameSettings {
+  GameSettings settings = 1; // 新的游戏设置
+}
+
+// 开始游戏请求
+message ReqStartGame {
+  GameSettings settings = 1; // 可选：开始游戏时应用的设置
+}
+
+// 提交猜测请求
+message ReqSubmitGuess {
+  string pokemon_name = 1;   // 猜测的宝可梦名称
+  int32 attempt_number = 2;  // 猜测次数编号
+}
+
+// 结束游戏请求(放弃)
+message ReqEndGame {
+  bool is_giving_up = 1;     // 是否为放弃
+}
+
+// 切换数据源请求
+message ReqToggleDataSource {
+  bool use_local_data = 1; // true使用本地数据，false使用远端API
+}
+
+//============================= 响应消息 =============================
+
+// 更新游戏设置响应
+message ResUpdateGameSettings {
+  bool success = 1;         // 是否成功
+  string error_message = 2; // 错误消息
+  GameSettings settings = 3; // 更新后的设置
+}
+
+// 开始游戏响应
+message ResStartGame {
+  bool success = 1;         // 是否成功
+  string error_message = 2; // 错误消息
+  GameSettings settings = 3; // 游戏设置
+  int64 start_timestamp = 4; // 游戏开始时间戳
+}
+
+// 猜测结果响应 - 发送给猜测的玩家本人
+message ResSubmitGuess {
+  bool success = 1;                // 是否成功
+  string error_message = 2;        // 错误消息
+  PlayerGuessDetail guess_detail = 3; // 猜测的详细结果
+  int32 attempts_remaining = 4;    // 剩余猜测次数
+}
+
+// 结束游戏响应
+message ResEndGame {
+  bool success = 1;         // 是否成功
+  string error_message = 2; // 错误消息
+}
+
+// 切换数据源响应
+message ResToggleDataSource {
+  bool success = 1;        // 是否成功
+  string error_message = 2;// 错误消息
+  bool use_local_data = 3; // 当前数据源设置
+}
+
+//============================= 通知消息 =============================
+
+// 游戏状态全量同步通知
+message NotifyGameState {
+  GameState state = 1;                 // 当前游戏状态
+  repeated PlayerInfo players = 2;     // 所有玩家的信息（包含猜测历史摘要）
+  GameSettings settings = 3;           // 当前游戏设置
+  int64 start_timestamp = 4;           // 游戏开始时间戳(如果游戏已开始)
+  int64 remaining_time_seconds = 5;    // 剩余时间(秒)，如果设置了时间限制
+  string host_id = 6;                  // 当前房主ID
+  int32 updated_reason = 7;            // 更新原因：1=玩家加入，2=玩家离开，3=玩家状态变化，4=房主变更，5=玩家猜测，6=其他
+  string updated_player_id = 8;        // 触发更新的玩家ID(如果适用)
+}
+
+// 玩家详细状态通知 - 仅发送给玩家本人
+message NotifyPlayerDetail {
+  PlayerDetailInfo player_detail = 1;  // 玩家详细信息（包含完整猜测历史）
+}
+
+// 设置变更通知
+message NotifySettingsChanged {
+  GameSettings settings = 1; // 新的游戏设置
+  string changed_by_id = 2;  // 谁修改了设置
+}
+
+// 游戏开始通知
+message NotifyGameStarted {
+  GameSettings settings = 1; // 游戏设置
+  int64 start_timestamp = 2; // 游戏开始时间戳
+  repeated PlayerInfo players = 3; // 参与游戏的所有玩家
+}
+
+// 游戏结束通知
+message NotifyGameEnded {
+  string answer_id = 1;         // 正确答案ID
+  string answer_name = 2;       // 正确答案名称
+  repeated PlayerRank rankings = 3; // 玩家排名
+  GameState next_state = 4;     // 游戏结束后的下一个状态
+}
+
+// 数据源变更通知
+message NotifyDataSourceChanged {
+  bool use_local_data = 1;   // 新的数据源设置
+  string changed_by_id = 2;  // 谁修改了设置
+} 

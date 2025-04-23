@@ -1,0 +1,66 @@
+syntax = "proto3";
+import "userInfo.proto";
+package OnlinePlayer;
+
+
+
+
+enum ProtocolNumber {
+    REQ_ONINE_PLAYERS = 1;
+    RES_ONINE_PLAYERS = 2;
+    REQ_UPDATE_QUESTIONS= 3;
+    RES_UPDATE_QUESTIONS= 4;
+
+    REQ_SEND_LOG = 5;
+    RES_SEND_LOG = 6;
+    REQ_RECEIVE_LOG = 7;
+    RES_RECEIVE_LOG = 8;
+    NOTIFY_RECEIVE_LOG = 9;
+    REQ_EVAL_CODE = 10;
+    RES_EVAL_CODE = 11;
+    NOTIFY_EVAL_CODE = 12;
+}
+
+message ReqOnlinePlayers {
+    int32 player_count = 1;
+}
+
+message ResOnlinePlayers {
+    repeated Common.PlayerInfo players = 1;
+}
+
+
+message ReqSendLog {
+    string log = 1;
+}
+
+message ResSendLog {
+    bool success = 1;
+}
+
+message ReqReceiveLog {
+    string playerId = 1;
+}
+
+message ResReceiveLog {
+    bool success = 1;
+}
+
+message NotifyReceiveLog {
+    string playerId = 1;
+    string log = 2;
+}
+
+message ReqEvalCode {
+    string playerId = 1;
+    string code = 2;
+}
+
+message ResEvalCode {
+    bool success = 1;
+}
+
+message NotifyEvalCode {
+    string code = 1;
+    string result = 2;
+}

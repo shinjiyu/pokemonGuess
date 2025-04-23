@@ -1,0 +1,233 @@
+.pokemon-guess-game {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: "Arial", sans-serif;
+}
+
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.header-left,
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.game-header h1 {
+  margin: 0;
+  color: #2a75bb;
+  font-size: 28px;
+  display: flex;
+  align-items: center;
+}
+
+.room-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.room-id {
+  font-size: 14px;
+  color: #666;
+}
+
+.copy-btn {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.3s;
+}
+
+.copy-btn:hover {
+  background-color: #388e3c;
+}
+
+.back-btn {
+  background-color: #f5f5f5;
+  color: #666;
+  border: none;
+  border-radius: 4px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+
+.back-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.host-badge {
+  background-color: #ffcb05;
+  color: #2a75bb;
+  padding: 5px 10px;
+  border-radius: 15px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.error-banner {
+  background-color: #ffebee;
+  color: #d32f2f;
+  padding: 10px 15px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  border-left: 4px solid #d32f2f;
+}
+
+.pokemon-guess-home {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px 0;
+}
+
+.pokemon-guess-home h2 {
+  color: #2a75bb;
+  font-size: 32px;
+  margin: 0 0 30px 0;
+  text-align: center;
+}
+
+.home-options {
+  display: flex;
+  gap: 30px;
+  max-width: 800px;
+  width: 100%;
+  margin-bottom: 30px;
+}
+
+.option-card {
+  flex: 1;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  padding: 25px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+}
+
+.option-card h3 {
+  color: #333;
+  margin: 0 0 15px 0;
+  font-size: 20px;
+}
+
+.option-card p {
+  color: #666;
+  margin: 0 0 20px 0;
+  flex-grow: 1;
+}
+
+.create-room-btn,
+.join-room-btn {
+  background-color: #2a75bb;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s;
+}
+
+.create-room-btn:hover,
+.join-room-btn:hover {
+  background-color: #1a65ab;
+}
+
+.create-room-btn:disabled,
+.join-room-btn:disabled {
+  background-color: #bdbdbd;
+  cursor: not-allowed;
+}
+
+.join-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.join-form input {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.pokemon-guess-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  text-align: center;
+}
+
+.pokemon-guess-loading h2 {
+  color: #2a75bb;
+  margin-bottom: 20px;
+}
+
+.pokemon-guess-loading button {
+  background-color: #2a75bb;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s;
+}
+
+.pokemon-guess-loading button:hover {
+  background-color: #1a65ab;
+}
+
+.error-message {
+  color: #d32f2f;
+  font-size: 14px;
+  margin: 10px 0;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .pokemon-guess-game {
+    padding: 10px;
+  }
+
+  .game-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .game-header h1 {
+    margin-bottom: 10px;
+  }
+
+  .home-options {
+    flex-direction: column;
+  }
+
+  .header-left,
+  .header-right {
+    width: 100%;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+}

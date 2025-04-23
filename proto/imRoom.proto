@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = ".";
+
+message RoomRequest {
+  string server_target = 1; // Indicates the server to which the request should be forwarded
+  int32 command_id = 2;
+  string app = 3;             
+  string user_id = 4;         // Using string to avoid int64 overflow issues in older JavaScript versions
+  bytes data = 5;             // Data to be decoded based on the command_id
+  int32 sequence_id = 6;
+}
+
+message RoomResponse { 
+  int32 sequence_id = 1;   // If this is a notify packet, this field should be 0
+  string server_target = 2; 
+  int32 command_id = 3;
+  bytes data = 4;
+}
