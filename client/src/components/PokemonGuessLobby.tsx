@@ -17,6 +17,7 @@ const PokemonGuessLobby: React.FC<PokemonGuessLobbyProps> = ({ gameService, game
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [settingsUpdater, setSettingsUpdater] = useState<string | null>(null);
 
   // 初始化时从gameState中获取设置
   useEffect(() => {
@@ -24,6 +25,29 @@ const PokemonGuessLobby: React.FC<PokemonGuessLobbyProps> = ({ gameService, game
       setSettings(gameState.settings);
     }
   }, [gameState]);
+
+  // 监听设置变更事件
+  useEffect(() => {
+    const handleSettingsChanged = (newSettings: GameSettings, changedById: string) => {
+      setSettings(newSettings);
+      
+      // 显示谁更新了设置（如果不是当前用户）
+      if (changedById && changedById !== gameService.getPlayerDetail()?.playerId) {
+        const changedByPlayer = gameState?.players?.find(player => player.playerId === changedById);
+        if (changedByPlayer) {
+          setSettingsUpdater(changedByPlayer.nickname);
+          // 3秒后清除更新者信息
+          setTimeout(() => setSettingsUpdater(null), 3000);
+        }
+      }
+    };
+
+    gameService.onSettingsChanged(handleSettingsChanged);
+    
+    return () => {
+      gameService.offSettingsChanged(handleSettingsChanged);
+    };
+  }, [gameService, gameState]);
 
   // 更新游戏设置
   const updateSettings = async () => {
@@ -66,22 +90,41 @@ const PokemonGuessLobby: React.FC<PokemonGuessLobbyProps> = ({ gameService, game
     if (!gameState?.players?.length) {
       return <p className="no-players">等待玩家加入...</p>;
     }
+    
+    // 获取当前玩家ID，用于突出显示
+    const myPlayerId = gameService.getPlayerDetail()?.playerId || '';
 
     return (
       <div className="player-list">
         <h3>玩家列表 ({gameState.players.length})</h3>
         <ul>
-          {gameState.players.map(player => (
-            <li key={player.playerId} className={`player-item ${player.isHost ? 'host' : ''}`}>
-              <div className="player-avatar">
-                <img src={player.avatarUrl || '/assets/default-avatar.png'} alt={player.nickname} />
-              </div>
-              <div className="player-info">
-                <span className="player-name">{player.nickname}</span>
-                {player.isHost && <span className="host-tag">房主</span>}
-              </div>
-            </li>
-          ))}
+          {gameState.players.map(player => {
+            const isCurrentPlayer = player.playerId === myPlayerId;
+            
+            return (
+              <li 
+                key={player.playerId} 
+                className={`player-item ${player.isHost ? 'host' : ''} ${isCurrentPlayer ? 'current-player' : ''}`}
+              >
+                <div className="player-avatar">
+                  <img src={player.avatarUrl || '/assets/default-avatar.png'} alt={player.nickname} />
+                  {isCurrentPlayer && <span className="current-player-marker">你</span>}
+                </div>
+                
+                <div className="player-info">
+                  <div className="player-name-row">
+                    <span className="player-name">{player.nickname}</span>
+                    {player.isHost && <span className="host-tag">房主</span>}
+                  </div>
+                  <div className="player-status">
+                    <span className="status-badge status-waiting">
+                      <span className="status-icon waiting">⏱</span> 准备中
+                    </span>
+                  </div>
+                </div>
+              </li>
+            );
+          })}
         </ul>
       </div>
     );
@@ -93,6 +136,11 @@ const PokemonGuessLobby: React.FC<PokemonGuessLobbyProps> = ({ gameService, game
         <div className="lobby-settings">
           <h2>游戏设置</h2>
           {error && <div className="error-message">{error}</div>}
+          {settingsUpdater && (
+            <div className="settings-notification">
+              {settingsUpdater} 更新了游戏设置
+            </div>
+          )}
 
           <div className="settings-form">
             <div className="form-group">

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import SYSTEM_CONFIG from '../core/config/SYSTEM_CONFIG';
 import { GameState, PlayerRank, PokemonGuessService } from '../services/PokemonGuessService';
 import '../styles/PokemonGuessGame.css';
 import { UserManager } from '../user/UserManager';
@@ -115,7 +116,7 @@ const PokemonGuessGame: React.FC = () => {
       // 从UserManager获取用户信息
       const userInfo = UserManager.getInstance().getUserInfo();
       
-      const success = await pokemonGuessService.connect('coated-linked-spies-visits.trycloudflare.com', '', { 
+      const success = await pokemonGuessService.connect(SYSTEM_CONFIG.SERVER.DEFAULT_URL, '', { 
         create: true,
         nickName: userInfo.nickname,
         avatar: userInfo.avatar,
@@ -151,7 +152,7 @@ const PokemonGuessGame: React.FC = () => {
       // 从UserManager获取用户信息
       const userInfo = UserManager.getInstance().getUserInfo();
       
-      const success = await pokemonGuessService.connect('coated-linked-spies-visits.trycloudflare.com', inputRoomId.trim(), {
+      const success = await pokemonGuessService.connect(SYSTEM_CONFIG.SERVER.DEFAULT_URL, inputRoomId.trim(), {
         nickName: userInfo.nickname,
         avatar: userInfo.avatar,
         gender: userInfo.gender
@@ -247,7 +248,7 @@ const PokemonGuessGame: React.FC = () => {
 
     return (
       <>
-        <header className="game-header">
+        <header className={`game-header ${gameScreen === GameScreen.PLAY ? 'play-header' : ''}`}>
           <div className="header-left">
             <h1>猜宝可梦游戏</h1>
             <button className="back-btn" onClick={disconnectAndGoHome}>返回</button>
@@ -295,7 +296,7 @@ const PokemonGuessGame: React.FC = () => {
   };
 
   return (
-    <div className="pokemon-guess-game">
+    <div className={`pokemon-guess-game ${gameScreen === GameScreen.PLAY ? 'play-mode' : ''}`}>
       {renderGameContent()}
     </div>
   );

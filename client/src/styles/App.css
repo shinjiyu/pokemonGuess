@@ -4,6 +4,50 @@
   min-height: 100vh;
 }
 
+/* 新增头部容器样式 */
+.header-container {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: #4a148c;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease;
+}
+
+.header-container.collapsed {
+  transform: translateY(-100%);
+}
+
+.header-container.collapsed .header-toggle {
+  transform: translate(-50%, 100%);
+  /* 把按钮定位到屏幕边缘，消除间隙 */
+  bottom: 0;
+}
+
+.header-toggle {
+  position: absolute;
+  bottom: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 25px;
+  background-color: #4a148c;
+  color: white;
+  border: none;
+  border-radius: 0 0 5px 5px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 18px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease, bottom 0.3s ease;
+}
+
+.header-toggle:hover {
+  background-color: #6a1fc0;
+}
+
 .header {
   background-color: #4a148c;
   color: white;
@@ -13,6 +57,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  transition: all 0.3s ease;
 }
 
 .header h1 {
@@ -63,6 +108,13 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  padding: 0;
+}
+
+/* 仅在非Pokemon游戏内容时应用居中样式 */
+.main:not(.pokemon-content) {
   align-items: center;
   justify-content: center;
   padding: 2rem;
@@ -170,6 +222,17 @@
 .pokemon-nav:hover,
 .pokemon-nav.active {
   background-color: #d32f2f;
+}
+
+.main-content {
+  padding: 20px;
+  min-height: calc(100vh - 70px);
+}
+
+/* For Pokemon Game UI */
+.pokemon-content {
+  padding: 10px;
+  min-height: calc(100vh - 60px);
 }
 
 @media (max-width: 768px) {

@@ -223,7 +223,7 @@ export class OnlinePlayerRoom extends BaseRoomForIM {
             // Extract player information from options
             const playerInfo: Common.IPlayerInfo = {
                 playerId: userId,
-                nickname: (options as any).nickName || "",
+                nickname: (options as any).nickname || "",
                 avatar: (options as any).avatar || "",
                 gender: (options as any).gender || ""
             };

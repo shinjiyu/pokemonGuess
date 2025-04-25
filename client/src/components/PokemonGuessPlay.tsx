@@ -213,14 +213,15 @@ const PokemonGuessPlay: React.FC<PokemonGuessPlayProps> = ({ gameService, gameSt
     }
   };
 
-  // 获取猜测结果状态文本
-  const getStatusText = (status: number): string => {
+  // 辅助函数：根据状态值获取状态文本
+  const getStatusText = (status: number) => {
+    // 这里应该匹配枚举值，确保与proto定义的GuessResultStatus一致
     switch (status) {
-      case 1: return '猜对了';
-      case 2: return '猜错了';
-      case 3: return '放弃了';
-      case 4: return '连接断开';
-      default: return '未知';
+      case 1: return "猜对";
+      case 2: return "猜错";
+      case 3: return "放弃";
+      case 4: return "逃跑";
+      default: return "未知";
     }
   };
 
@@ -250,33 +251,77 @@ const PokemonGuessPlay: React.FC<PokemonGuessPlayProps> = ({ gameService, gameSt
 
   // 渲染玩家列表（简短信息）
   const renderPlayerList = () => {
+    // 从服务获取当前玩家ID
+    const myPlayerId = playerDetail?.playerId || '';
+    
     return (
-      <div className="player-status-list">
-        <h3>玩家状态</h3>
-        <ul>
-          {gameState.players.map(player => {
-            const latestGuess = player.guessHistory?.length > 0 
-              ? player.guessHistory[player.guessHistory.length - 1] 
+      <div className="player-list">
+        <h3 className="player-list-title">玩家状态</h3>
+        <div className="player-list-container">
+          {gameState?.players?.map((player) => {
+            const isCurrentPlayer = player.playerId === myPlayerId;
+            const latestGuess = player.guessHistory && player.guessHistory.length > 0
+              ? player.guessHistory[player.guessHistory.length - 1]
               : null;
+            
+            // 计算玩家状态显示的附加信息
+            let statusIcon = null;
+            let statusText = "等待中";
+            let statusClass = "waiting";
+            
+            if (latestGuess) {
+              statusClass = `status-${latestGuess.status}`;
+              statusText = getStatusText(latestGuess.status);
               
+              if (latestGuess.status === 1) {
+                statusIcon = <span className="status-icon correct">✓</span>;
+              } else if (latestGuess.status === 2) {
+                statusIcon = <span className="status-icon wrong">✗</span>;
+              } else if (latestGuess.status === 3) {
+                statusIcon = <span className="status-icon gave-up">⊘</span>;
+              } else if (latestGuess.status === 4) {
+                statusIcon = <span className="status-icon disconnected">⚡</span>;
+              }
+            } else {
+              statusIcon = <span className="status-icon waiting">⏱</span>;
+            }
+            
             return (
-              <li key={player.playerId} className="player-status-item">
-                <span className="player-name">{player.nickname}</span>
-                <span className={`player-status status-${player.status}`}>
-                  {player.status === 1 ? '游戏中' : 
-                   player.status === 2 ? '已完成' : 
-                   player.status === 3 ? '已放弃' : '未知'}
-                </span>
-                <span className="guess-count">尝试: {player.attemptsUsed}/{gameState.settings.maxAttempts}</span>
-                {latestGuess && (
-                  <span className={`latest-guess status-${latestGuess.status}`}>
-                    最近: {getStatusText(latestGuess.status)}
-                  </span>
-                )}
-              </li>
+              <div 
+                key={player.playerId} 
+                className={`player-item ${isCurrentPlayer ? 'current-player' : ''} ${latestGuess?.status === 1 ? 'correct-guess' : ''}`}
+              >
+                <div className="player-avatar">
+                  <img 
+                    src={player.avatarUrl || '/default-avatar.png'} 
+                    alt={player.nickname || '玩家'} 
+                    className="avatar-image"
+                  />
+                  {isCurrentPlayer && <span className="current-player-marker">你</span>}
+                  {latestGuess?.status === 1 && <span className="correct-guess-marker">👑</span>}
+                </div>
+                
+                <div className="player-info">
+                  <div className="player-name-row">
+                    <span className="player-name">{player.nickname || '玩家'}</span>
+                    {player.isHost && <span className="host-badge">房主</span>}
+                  </div>
+                  
+                  <div className="player-stats-row">
+                    <span className={`status-badge ${statusClass}`}>
+                      {statusIcon} {statusText}
+                    </span>
+                    {latestGuess && (
+                      <span className="attempt-info">
+                        尝试: {latestGuess.attemptNumber || 0}/{gameState?.settings?.maxAttempts || 6}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
             );
           })}
-        </ul>
+        </div>
       </div>
     );
   };
@@ -287,9 +332,12 @@ const PokemonGuessPlay: React.FC<PokemonGuessPlayProps> = ({ gameService, gameSt
       return <p className="no-guesses">还没有猜测记录</p>;
     }
 
+    // 创建一个数组副本并倒序显示，最新的猜测显示在最上方
+    const reversedHistory = [...guessHistory].reverse();
+
     return (
       <div className="guess-history">
-        {guessHistory.map((guess, index) => (
+        {reversedHistory.map((guess, index) => (
           <div key={index} className={`guess-item status-${guess.status}`}>
             <div className="guess-header">
               <span className="attempt-number">#{guess.attemptNumber}</span>
@@ -502,45 +550,45 @@ const PokemonGuessPlay: React.FC<PokemonGuessPlayProps> = ({ gameService, gameSt
       </div>
 
       <div className="play-content">
-        <div className="players-section">
+        <div className="players-section visible">
           {renderPlayerList()}
         </div>
-        
         <div className="guess-section">
-          <h2>猜宝可梦</h2>
           {error && <div className="error-message">{error}</div>}
           
-          <div className="guess-form">
-            <div className="autocomplete-wrapper">
-              <input 
-                ref={inputRef}
-                type="text"
-                value={pokemonName}
-                onChange={handleInputChange}
-                placeholder="输入宝可梦名称..."
-                disabled={isSubmitting || currentAttempt > gameState.settings.maxAttempts}
-              />
-              {showDropdown && (
-                <div className="pokemon-dropdown" ref={dropdownRef}>
-                  {filteredNames.map((name, index) => (
-                    <div 
-                      key={index} 
-                      className="pokemon-option"
-                      onClick={() => selectPokemon(name)}
-                    >
-                      {name}
-                    </div>
-                  ))}
-                </div>
-              )}
+          <div className="guess-input-container">
+            <div className="guess-form">
+              <div className="autocomplete-wrapper">
+                <input 
+                  ref={inputRef}
+                  type="text"
+                  value={pokemonName}
+                  onChange={handleInputChange}
+                  placeholder="输入宝可梦名称..."
+                  disabled={isSubmitting || currentAttempt > gameState.settings.maxAttempts}
+                />
+                {showDropdown && (
+                  <div className="pokemon-dropdown" ref={dropdownRef}>
+                    {filteredNames.map((name, index) => (
+                      <div 
+                        key={index} 
+                        className="pokemon-option"
+                        onClick={() => selectPokemon(name)}
+                      >
+                        {name}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <button 
+                className="submit-guess-btn"
+                onClick={handleSubmitGuess}
+                disabled={isSubmitting || !pokemonName.trim() || currentAttempt > gameState.settings.maxAttempts || !pokemonNames.includes(pokemonName)}
+              >
+                {isSubmitting ? '提交中...' : '提交'}
+              </button>
             </div>
-            <button 
-              className="submit-guess-btn"
-              onClick={handleSubmitGuess}
-              disabled={isSubmitting || !pokemonName.trim() || currentAttempt > gameState.settings.maxAttempts || !pokemonNames.includes(pokemonName)}
-            >
-              {isSubmitting ? '提交中...' : '提交'}
-            </button>
           </div>
           
           <div className="guess-history-section">

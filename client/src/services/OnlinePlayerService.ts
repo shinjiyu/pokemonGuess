@@ -1,4 +1,5 @@
 import { EventEmitter } from 'events';
+import SYSTEM_CONFIG from '../core/config/SYSTEM_CONFIG';
 import { RoomModule } from '../network/RoomModule';
 import { Common, OnlinePlayer, match } from '../proto/combined';
 import { UserManager } from '../user/UserManager';
@@ -223,7 +224,7 @@ export class OnlinePlayerService {
      * @param forced Force reconnection even if already connected
      * @returns Promise resolving to connection success (true) or failure (false)
      */
-    public async connect(url: string, roomId: string, forced: boolean = false): Promise<boolean> {
+    public async connect(url: string = SYSTEM_CONFIG.SERVER.DEFAULT_URL, roomId: string = SYSTEM_CONFIG.GAME.DEFAULT_ROOM, forced: boolean = false): Promise<boolean> {
         // 防重入检查
         const operationKey = `connect:${url}:${roomId}`;
         if (this.isOperationInProgress(operationKey)) {
@@ -251,11 +252,16 @@ export class OnlinePlayerService {
                 // 保存最后连接的URL和房间ID，以便于重连使用
                 localStorage.setItem('last_server_url', url);
                 localStorage.setItem('last_room_id', roomId);
+
+                // Emit connection status change event
+                this.eventEmitter.emit('connection_status', true);
             }
             return success;
         } catch (error) {
             console.error('Failed to connect to server:', error);
             this.connected = false;
+            // Emit connection status change event
+            this.eventEmitter.emit('connection_status', false);
             return false;
         } finally {
             this.setOperationStatus(operationKey, false);
@@ -277,11 +283,17 @@ export class OnlinePlayerService {
         if (this.roomModule) {
             this.roomModule.disconnect();
         }
+        const wasConnected = this.connected;
         this.connected = false;
         this.currentMatchId = null;
         this.matchmaking = false;
         // 清除所有锁
         this.pendingOperations.clear();
+
+        // Only emit if there was a change in connection status
+        if (wasConnected) {
+            this.eventEmitter.emit('connection_status', false);
+        }
     }
 
     /**
@@ -298,7 +310,7 @@ export class OnlinePlayerService {
             return;
         }
 
-        // 添加通知记录包装器
+        // Add notification recording wrapper
         const addLoggingNotificationCallback = (commandId: number, handler: (data: any) => void) => {
             this.roomModule!.addNotificationCallback(commandId, (data: any) => {
                 if (this.enableLogging) {
@@ -360,6 +372,77 @@ export class OnlinePlayerService {
                 console.error('Error processing code evaluation notification:', error);
             }
         });
+
+        // Connect to UserManager to sync player info
+        const userManager = UserManager.getInstance();
+        userManager.onUserInfoUpdated(this.handleUserInfoUpdated.bind(this));
+
+        // Initial player info sync
+        this.handleUserInfoUpdated(userManager.getUserInfo());
+    }
+
+    /**
+     * Handle user information updates from UserManager
+     * @param userInfo Updated user information
+     */
+    private handleUserInfoUpdated(userInfo: any): void {
+        // Convert UserManager's UserInfo to PlayerInfo format
+        const playerInfo: Common.IPlayerInfo = {
+            playerId: userInfo.userId,
+            nickname: userInfo.nickname,
+            avatar: userInfo.avatar ? userInfo.avatar.toString() : "1",
+            gender: userInfo.gender === 'male' ? "1" : userInfo.gender === 'female' ? "2" : "0"
+        };
+
+        // Emit player_info_updated event
+        this.eventEmitter.emit('player_info_updated', playerInfo);
+    }
+
+    /**
+     * Get current player information
+     * @returns Current player information
+     */
+    public getPlayerInfo(): Common.IPlayerInfo {
+        const userManager = UserManager.getInstance();
+        const userInfo = userManager.getUserInfo();
+
+        return {
+            playerId: userInfo.userId,
+            nickname: userInfo.nickname,
+            avatar: userInfo.avatar ? userInfo.avatar.toString() : "1",
+            gender: userInfo.gender === 'male' ? "1" : userInfo.gender === 'female' ? "2" : "0"
+        };
+    }
+
+    /**
+     * Update player information
+     * @param info Updated player information
+     */
+    public updatePlayerInfo(info: Common.IPlayerInfo): void {
+        const userManager = UserManager.getInstance();
+
+        // Update user manager with new values
+        if (info.nickname) {
+            userManager.setNickname(info.nickname);
+        }
+
+        if (info.avatar !== undefined && info.avatar !== null) {
+            // Avatar is already a string in Common.IPlayerInfo
+            userManager.setAvatar(info.avatar);
+        }
+
+        if (info.gender !== undefined && info.gender !== null) {
+            // Convert gender string to UserManager format
+            let genderStr = 'unknown';
+            if (info.gender === "1") {
+                genderStr = 'male';
+            } else if (info.gender === "2") {
+                genderStr = 'female';
+            }
+            userManager.setGender(genderStr);
+        }
+
+        // UserManager will emit userInfoUpdated event, which we listen to in setupEventListeners
     }
 
     // Online Players Methods
@@ -692,5 +775,41 @@ export class OnlinePlayerService {
 
     public offCodeEvaluation(callback: (code: string, result?: string) => void): void {
         this.eventEmitter.off('codeEvaluation', callback);
+    }
+
+    /**
+     * Add a connection status listener
+     * @param callback Function to call when connection status changes
+     */
+    public addConnectionListener(callback: (connected: boolean) => void): void {
+        this.eventEmitter.on('connection_status', callback);
+        // Immediately call with current connection status
+        callback(this.connected);
+    }
+
+    /**
+     * Remove a connection status listener
+     * @param callback Function to remove from listeners
+     */
+    public removeConnectionListener(callback: (connected: boolean) => void): void {
+        this.eventEmitter.off('connection_status', callback);
+    }
+
+    /**
+     * Add a general event listener
+     * @param event Event name to listen for
+     * @param callback Function to call when event occurs
+     */
+    public addEventListener<T>(event: string, callback: (data: T) => void): void {
+        this.eventEmitter.on(event, callback);
+    }
+
+    /**
+     * Remove a general event listener
+     * @param event Event name to stop listening for
+     * @param callback Function to remove from listeners
+     */
+    public removeEventListener<T>(event: string, callback: (data: T) => void): void {
+        this.eventEmitter.off(event, callback);
     }
 } 

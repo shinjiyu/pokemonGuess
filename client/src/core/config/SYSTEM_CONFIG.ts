@@ -2,7 +2,7 @@ const SYSTEM_CONFIG = {
     // Server connection settings
     SERVER: {
         // Default server URL (can be overridden at runtime)
-        DEFAULT_URL: "coated-linked-spies-visits.trycloudflare.com ",
+        DEFAULT_URL: "coated-linked-spies-visits.trycloudflare.com",
 
         // Connection retry settings
         RETRY_COUNT: 3,

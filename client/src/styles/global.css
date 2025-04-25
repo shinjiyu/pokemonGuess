@@ -1,0 +1,110 @@
+/* 全局样式表 */
+
+/* 确保玩家列表在所有页面正确显示 */
+.player-list {
+  width: 100%;
+}
+
+/* 确保Pokemon游戏在main容器中占据全宽 */
+.pokemon-content {
+  padding: 0 !important;
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
+.pokemon-content .pokemon-guess-game {
+  max-width: 100% !important;
+  width: 100% !important;
+  padding: 0 !important;
+}
+
+/* 只在游戏页面隐藏游戏区域头部 */
+.play-mode .game-header {
+  display: none !important;
+}
+
+/* 强制优化猜测界面布局 */
+.play-content {
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.guess-section {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.players-section {
+  display: block !important;
+}
+
+.player-list-container {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
+  gap: 8px !important;
+}
+
+.player-item {
+  display: flex !important;
+  align-items: center !important;
+  background-color: white !important;
+  border-radius: 6px !important;
+  padding: 8px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  transition: transform 0.2s, box-shadow 0.2s !important;
+}
+
+.player-item:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15) !important;
+}
+
+.player-item.current-player {
+  border: 2px solid #2a75bb !important;
+}
+
+.player-avatar {
+  position: relative !important;
+  margin-right: 8px !important;
+  flex-shrink: 0 !important;
+}
+
+.avatar-image {
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: 50% !important;
+  object-fit: cover !important;
+  border: 1px solid #e0e0e0 !important;
+}
+
+.current-player-marker {
+  position: absolute !important;
+  bottom: -2px !important;
+  right: -2px !important;
+  background-color: #2a75bb !important;
+  color: white !important;
+  border-radius: 50% !important;
+  width: 14px !important;
+  height: 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 8px !important;
+  font-weight: bold !important;
+}
+
+/* 媒体查询 */
+@media (max-width: 768px) {
+  .player-list-container {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .player-list-container {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}

@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { MatchInfo, OnlinePlayerService, PlayerInfo } from '../services/OnlinePlayerService';
 import '../styles/OnlineMatch.css';
 
+// 使用环境变量或常量控制功能开关
+const ENABLE_MATCHMAKING = false; // 设置为false以隐藏匹配功能
+
 const OnlineMatch: React.FC = () => {
   const [onlinePlayers, setOnlinePlayers] = useState<PlayerInfo[]>([]);
   const [isMatchmaking, setIsMatchmaking] = useState(false);
@@ -128,7 +131,8 @@ const OnlineMatch: React.FC = () => {
           Refresh Players
         </button>
         
-        {!isMatchmaking && !matchInfo ? (
+        {/* 匹配功能的UI，通过ENABLE_MATCHMAKING控制显示 */}
+        {ENABLE_MATCHMAKING && !isMatchmaking && !matchInfo ? (
           <div className="matchmaking-panel">
             <div className="form-control">
               <label>Game Mode:</label>
@@ -160,7 +164,7 @@ const OnlineMatch: React.FC = () => {
               Start Matchmaking
             </button>
           </div>
-        ) : isMatchmaking ? (
+        ) : ENABLE_MATCHMAKING && isMatchmaking ? (
           <div className="matchmaking-status">
             <p>Matchmaking in progress... {matchId}</p>
             <div className="loading-spinner"></div>
@@ -171,7 +175,7 @@ const OnlineMatch: React.FC = () => {
               Cancel
             </button>
           </div>
-        ) : (
+        ) : ENABLE_MATCHMAKING && matchInfo ? (
           <div className="match-info">
             <h3>Match Found!</h3>
             <p>Room ID: {matchInfo?.roomId}</p>
@@ -195,7 +199,7 @@ const OnlineMatch: React.FC = () => {
               New Match
             </button>
           </div>
-        )}
+        ) : null}
       </div>
       
       <div className="player-list">
