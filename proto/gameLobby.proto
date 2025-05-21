@@ -1,0 +1,57 @@
+syntax = "proto3";
+package gameLobby;
+
+// 获取支持的游戏类型列表
+message ReqGameTypeList {}
+message ResGameTypeList {
+  repeated GameTypeInfo gameTypes = 1;
+}
+message GameTypeInfo {
+  string id = 1;      // 游戏类型唯一标识
+  string name = 2;    // 游戏名称
+  string desc = 3;    // 游戏描述
+  bool   enabled = 4; // 是否开放
+}
+
+// 创建房间
+message ReqCreateRoom {
+  string userId = 1;
+  string gameType = 2;
+}
+message ResCreateRoom {
+  bool success = 1;
+  string roomId = 2;
+  string errorMessage = 3;
+}
+
+// 邀请玩家
+message ReqInvitePlayer {
+  string roomId = 1;
+  string inviteeId = 2;
+}
+message ResInvitePlayer {
+  bool success = 1;
+  string errorMessage = 2;
+}
+
+// 通过房间号加入房间
+message ReqJoinRoomById {
+  string roomId = 1;
+  string userId = 2;
+}
+message ResJoinRoomById {
+  bool success = 1;
+  string errorMessage = 2;
+}
+
+// 协议号
+enum ProtocolNumber {
+  REQ_GAME_TYPE_LIST = 10001;
+  RES_GAME_TYPE_LIST = 10002;
+  REQ_CREATE_ROOM = 10003;
+  RES_CREATE_ROOM = 10004;
+  REQ_INVITE_PLAYER = 10005;
+  RES_INVITE_PLAYER = 10006;
+  REQ_JOIN_ROOM_BY_ID = 10007;
+  RES_JOIN_ROOM_BY_ID = 10008;
+} 
